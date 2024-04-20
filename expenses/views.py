@@ -8,36 +8,76 @@ from django.shortcuts import get_object_or_404
 from rest_framework.decorators import action
 
 
+# class ExpenseWithSharesViewSet(viewsets.ViewSet):
+#     """
+#     A simple ViewSet for listing expenses along with their shares.
+#     """
+
+#     def retrieve(self, request, pk=None):
+#         try:
+#             # Retrieve the expense object
+#             expense = Expense.objects.get(pk=pk)
+            
+#             # Serialize the expense object
+#             expense_serializer = ExpenseSerializer(expense)
+            
+#             # Retrieve all shares related to the expense
+#             shares = Share.objects.filter(expense=expense)
+            
+#             # Serialize all shares related to the expense
+#             shares_serializer = ShareSerializer(shares, many=True)
+            
+#             # Combine the expense and shares data
+#             response_data = {
+#                 'expense': expense_serializer.data,
+#                 'shares': shares_serializer.data
+#             }
+            
+#             return Response(response_data)
+        
+#         except Expense.DoesNotExist:
+#             return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+
 class ExpenseWithSharesViewSet(viewsets.ViewSet):
     """
-    A simple ViewSet for listing expenses along with their shares.
+    A simple ViewSet for listing expenses along with their shares for a specific user.
     """
 
-    def retrieve(self, request, pk=None):
-        try:
-            # Retrieve the expense object
-            expense = Expense.objects.get(pk=pk)
-            
-            # Serialize the expense object
-            expense_serializer = ExpenseSerializer(expense)
-            
-            # Retrieve all shares related to the expense
+    def list(self, request, username=None):
+        # Get the user by username
+        user = get_object_or_404(CustomUser, username=username)
+        
+        # Retrieve expenses where the user is the payer
+        expenses = Expense.objects.filter(payer=user)
+
+        # List to store combined data
+        response_data = []
+        
+        # Iterate through expenses
+        for expense in expenses:
+            # Retrieve the shares related to the current expense
             shares = Share.objects.filter(expense=expense)
             
-            # Serialize all shares related to the expense
+            # Serialize the expense
+            expense_serializer = ExpenseSerializer(expense)
+            
+            # Serialize the shares
             shares_serializer = ShareSerializer(shares, many=True)
             
-            # Combine the expense and shares data
-            response_data = {
+            # Combine the expense and shares data into a dictionary
+            expense_and_shares = {
                 'expense': expense_serializer.data,
                 'shares': shares_serializer.data
             }
             
-            return Response(response_data)
+            # Add the combined data to the response list
+            response_data.append(expense_and_shares)
         
-        except Expense.DoesNotExist:
-            return Response({'error': 'Expense not found'}, status=status.HTTP_404_NOT_FOUND)
-
+        # Return the combined data as a response
+        return Response(response_data, status=status.HTTP_200_OK)
+    
+    
 # Create your views here.
 class CustomUserViewset(viewsets.ModelViewSet):
     serializer_class = CustomUserSerializer
