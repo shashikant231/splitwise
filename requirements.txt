@@ -1,6 +1,6 @@
 asgiref==3.8.1
 # Babel==2.14.0
-Django==5.0.4
+Django==4.2.11
 django-filter==24.2
 # django-money==3.4.1
 # django-phonenumber-field==7.3.0
