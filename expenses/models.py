@@ -1,7 +1,6 @@
 # models.py
 from django.db import models
 from django.contrib.auth.models import AbstractUser
-from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
 
@@ -37,18 +36,6 @@ class Expense(models.Model):
     date_created = models.DateTimeField(_('date added'), auto_now_add=True)
     payer = models.ForeignKey(CustomUser, on_delete=models.CASCADE, blank=False,null=False, related_name='payers')
     participants = models.ManyToManyField(CustomUser, related_name='expenses_shared')
-
-    def settled(self):
-        shares = Share.objects.filter(expense=self)
-        return all(i.settled() for i in shares)
-
-    def shares_count(self):
-        shares = Share.objects.filter(expense=self)
-        return len(shares)
-
-    def due(self):
-        shares = Share.objects.filter(expense=self)
-        return self.amount.amount - sum(share.share.amount for share in shares if share.settled())
 
     def __str__(self):
         return f'{self.description}-{self.payer}-{self.amount}'
